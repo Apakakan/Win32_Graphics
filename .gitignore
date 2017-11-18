@@ -1,0 +1,6 @@
+*.suo
+*.exe
+*.ilk
+*.pdb
+*.obj
+Old/win32_window.cpp
