@@ -91,6 +91,52 @@ struct Win32_color
 struct v2
 {
 	float x,y;
+
+	v2(float x=0, float y=0)
+		:x(x),y(y)
+	{
+
+	}
+
+	v2 Scale(float scalar)
+	{
+		return v2(x*scalar, y*scalar);
+	}
+	float Dot(const v2& a)
+	{
+		return (x*a.x + y*a.y);
+	}
+	v2 Normalize()
+	{
+		float sum = this->Length();
+		return v2(x/sum,y/sum);
+	}
+	float Length()
+	{
+		return fabs(x) + fabs(y);
+	}
+
+	v2& operator=(const v2& a)
+	{
+		x=a.x;
+		y=a.y;
+		return*this;
+	}
+
+	v2 operator+(const v2& a)
+	{
+		return v2(x+a.x,y+a.y);
+	}
+
+	v2 operator-(const v2& a)
+	{
+		return v2(x-a.x,y-a.y);
+	}
+
+	v2 operator==(const v2& a) const
+	{
+		return (a.x == x && a.y == y);
+	}
 };
 
 win32_window_dimension Win32GetWindowDimension(HWND Window)
@@ -146,12 +192,20 @@ internal void ReadTGAImage(char* filename, struct Image* image)
 	}
 }
 
-internal float
+/*internal float
 DotProduct(v2 vector1, v2 vector2)
 {
 	float result = (vector1.x * vector2.x) + (vector1.y * vector2.y);
 	return result;
 }
+
+internal void 
+NormalizeVector(v2* vectorToNormalize)
+{
+	float sum = fabs(vectorToNormalize->x) + fabs(vectorToNormalize->y);
+	vectorToNormalize->x /= sum;
+	vectorToNormalize->y /= sum;
+}*/
 
 internal void 
 RenderAlignedBox(win32_offscreen_buffer *Buffer, int srcX, int srcY, int width, int height, Win32_color color)
@@ -234,10 +288,10 @@ RenderRotatedBox(win32_offscreen_buffer *Buffer, int srcX, int srcY, int width, 
 			v2 vecToPixel;
 			vecToPixel.x = x - corners[0].x;
 			vecToPixel.y = y - corners[0].y;
-			float rightDot = DotProduct(vecToPixel, rigthAxis);
+			float rightDot = vecToPixel.Dot(rigthAxis);
 			if(rightDot <= width && rightDot >= 0)
 			{
-				float upDot = DotProduct(vecToPixel, upAxis);
+				float upDot = vecToPixel.Dot(upAxis);
 				if(upDot <= height && upDot >= 0)
 				{
 					*Pixel = (color.Red << 16 | color.Green << 8 | color.Blue);
@@ -281,6 +335,54 @@ RenderSphere(win32_offscreen_buffer *Buffer, int srcX, int srcY, int radius, Win
 		Row += Buffer->Pitch;
 
 	}
+}
+
+internal void
+RenderLine(win32_offscreen_buffer * Buffer, v2 startPoint, v2 endPoint, int width, Win32_color color)
+{
+	v2 minXY;
+	v2 maxXY;
+	v2 lineDir;
+
+	//lineDir.x = endPoint.x - startPoint.x;
+	//lineDir.y = endPoint.y - startPoint.y;
+	lineDir = endPoint-startPoint;
+	lineDir = lineDir.Normalize();
+
+
+	minXY.x = ((startPoint.x - width < endPoint.x - width) ? (startPoint.x - width) : (endPoint.x - width));
+	minXY.y = ((startPoint.y - width < endPoint.y - width) ? (startPoint.y - width) : (endPoint.y - width));
+
+	maxXY.x = ((startPoint.x + width > endPoint.x + width) ? (startPoint.x + width) : (endPoint.x + width));
+	maxXY.y = ((startPoint.y + width > endPoint.y + width) ? (startPoint.y + width) : (endPoint.y + width));
+
+
+	uint8 *Row = (uint8 *)Buffer->Memory;
+	Row += ((int)minXY.y * Buffer->Pitch) + ((int)minXY.x * Buffer->BytesPerPixel);
+
+	for(int y = minXY.y; y < maxXY.y; ++y)
+	{
+		uint32 *Pixel = (uint32*)Row;
+		for(int x = minXY.x; x < maxXY.x; ++x)
+		{
+			v2 vecToPixel;
+			vecToPixel.x = x - startPoint.x;
+			vecToPixel.y = y - startPoint.y;
+
+			float dot = vecToPixel.Dot(lineDir);
+			v2 vecToPixelProjected = lineDir.Scale(dot);
+
+			v2 vecToLine = vecToPixel-vecToPixelProjected;
+
+			if(vecToLine.Length() < width)
+			{
+				*Pixel = (color.Red << 16 | color.Green << 8 | color.Blue);
+			}
+			Pixel++;
+		}
+		Row += Buffer->Pitch;
+	}
+
 }
 
 internal void
@@ -370,10 +472,10 @@ RenderRotatedTexture(win32_offscreen_buffer *Buffer, int srcX, int srcY, struct 
 			v2 vecToPixel;
 			vecToPixel.x = x - corners[0].x;
 			vecToPixel.y = y - corners[0].y;
-			float rightDot = DotProduct(vecToPixel, rigthAxis);
+			float rightDot = vecToPixel.Dot(rigthAxis);
 			if(rightDot <= image->width && rightDot >= 0)
 			{
-				float upDot = DotProduct(vecToPixel, upAxis);
+				float upDot = vecToPixel.Dot(upAxis);
 				if(upDot <= image->height && upDot >= 0)
 				{
 					int pixelIndex = ((int)upDot * image->width) + (int)rightDot;
@@ -600,6 +702,7 @@ WinMain(HINSTANCE Instance,
 			ReadTGAImage(filename, &image);
 			int XOffset = 0;
 			int YOffset = 0;
+			int y = 300;
 			double degrees = 0.0f;
 			double degreeToRadiance = (3.14 / 180.0);
 
@@ -656,7 +759,11 @@ WinMain(HINSTANCE Instance,
 				Win32_color Black;
 				Black.Red = 0;
 				Black.Green = 0;
-				Black.Blue = 0;				
+				Black.Blue = 0;	
+				Win32_color Red;
+				Red.Red = 255;
+				Red.Green = 0;
+				Red.Blue = 0;			
 
 				RenderAlignedBox(&GlobalBackbuffer, 0, 0, 1280, 720, Black);
 				
@@ -666,6 +773,9 @@ WinMain(HINSTANCE Instance,
 				RenderRotatedTexture(&GlobalBackbuffer, 700, 100, &image, degrees * degreeToRadiance);
 
 				RenderSphere(&GlobalBackbuffer, 200, 500, 50, White);
+
+				RenderLine(&GlobalBackbuffer, v2(900,300), v2(1100, 200), 10, Red);
+
 				HDC DeviceContext = GetDC(Window); //REMEMBER DeviceContext is a copy and MUST be Released later or MEMORY LEAK
 
 				win32_window_dimension Dimension = Win32GetWindowDimension(Window);
@@ -673,6 +783,11 @@ WinMain(HINSTANCE Instance,
 						Dimension.Width, Dimension.Height);
 				XOffset++;
 				//YOffset++;
+				y++;
+				if(y > 400)
+				{
+					y = 200;
+				}
 				degrees += 0.1;
 				ReleaseDC(Window, DeviceContext);
 			}
