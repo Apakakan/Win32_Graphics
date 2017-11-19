@@ -108,8 +108,10 @@ struct v2
 	}
 	v2 Normalize()
 	{
-		float sum = this->Length();
-		return v2(x/sum,y/sum);
+		//float sum = this->Length();
+		//return v2(x/sum,y/sum);
+		float length = sqrt(x*x) + sqrt(y*y); 
+		return v2(x / length, y / length);
 	}
 	float Length()
 	{
@@ -374,6 +376,9 @@ RenderLine(win32_offscreen_buffer * Buffer, v2 startPoint, v2 endPoint, int widt
 
 			v2 vecToLine = vecToPixel-vecToPixelProjected;
 
+			int test = vecToLine.Length();
+
+			*Pixel = (test << 16 | test << 8 | test);
 			if(vecToLine.Length() < width)
 			{
 				*Pixel = (color.Red << 16 | color.Green << 8 | color.Blue);
@@ -767,14 +772,14 @@ WinMain(HINSTANCE Instance,
 
 				RenderAlignedBox(&GlobalBackbuffer, 0, 0, 1280, 720, Black);
 				
-				RenderRotatedBox(&GlobalBackbuffer, 600, 500, 150, 80, degrees * degreeToRadiance, White);
+				//RenderRotatedBox(&GlobalBackbuffer, 600, 500, 150, 80, degrees * degreeToRadiance, White);
 
-				RenderTexture(&GlobalBackbuffer, 400, 100, &image);
-				RenderRotatedTexture(&GlobalBackbuffer, 700, 100, &image, degrees * degreeToRadiance);
+				//RenderTexture(&GlobalBackbuffer, 400, 100, &image);
+				//RenderRotatedTexture(&GlobalBackbuffer, 700, 100, &image, degrees * degreeToRadiance);
 
-				RenderSphere(&GlobalBackbuffer, 200, 500, 50, White);
+				//RenderSphere(&GlobalBackbuffer, 200, 500, 50, White);
 
-				RenderLine(&GlobalBackbuffer, v2(900,300), v2(1100, 200), 10, Red);
+				RenderLine(&GlobalBackbuffer, v2(300,300), v2(400, 400), 10, Red);
 
 				HDC DeviceContext = GetDC(Window); //REMEMBER DeviceContext is a copy and MUST be Released later or MEMORY LEAK
 
