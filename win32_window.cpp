@@ -30,6 +30,7 @@ struct Image
 	char header[18];
 	int width;
 	int height;
+	int pitch;
 	struct PixelInfo* data;
 };
 
@@ -177,6 +178,7 @@ internal void ReadTGAImage(char* filename, struct Image* image)
 		}*/
 		image->width = width;
 		image->height = height;	
+		image->pitch = width;
 
 		image->data = (struct PixelInfo *)VirtualAlloc(0, width * height * sizeof(struct PixelInfo), MEM_COMMIT, PAGE_READWRITE);
 		
@@ -404,7 +406,7 @@ RenderTexture(win32_offscreen_buffer *Buffer, int srcX, int srcY, struct Image* 
 		{
 				if(x + srcX >= 0 && x + srcX < Buffer->Width && y + srcY >= 0 && y + srcY < Buffer->Height)
 				{
-					pixelIndex = (y * image->width) + x;
+					pixelIndex = (y * image->pitch) + x;
 					*Pixel = (image->data[pixelIndex].r << 16 | image->data[pixelIndex].g << 8 | image->data[pixelIndex].b);
 					Pixel++;
 				}
@@ -483,7 +485,7 @@ RenderRotatedTexture(win32_offscreen_buffer *Buffer, int srcX, int srcY, struct 
 				float upDot = vecToPixel.Dot(upAxis);
 				if(upDot <= image->height && upDot >= 0)
 				{
-					int pixelIndex = ((int)upDot * image->width) + (int)rightDot;
+					int pixelIndex = ((int)upDot * image->pitch) + (int)rightDot;
 					*Pixel = (image->data[pixelIndex].r << 16 | image->data[pixelIndex].g << 8 | image->data[pixelIndex].b);
 				}
 			}
@@ -703,8 +705,14 @@ WinMain(HINSTANCE Instance,
 		if(Window) // != NULL
 		{
 			struct Image image;
+			struct Image partOfImage;
 			char* filename = "32test.tga";
 			ReadTGAImage(filename, &image);
+			partOfImage.width = image.width / 2;
+			partOfImage.height = image.height / 2;
+			partOfImage.pitch = image.pitch;
+			partOfImage.data = &image.data[image.width / 2];
+
 			int XOffset = 0;
 			int YOffset = 0;
 			int y = 300;
@@ -775,11 +783,13 @@ WinMain(HINSTANCE Instance,
 				//RenderRotatedBox(&GlobalBackbuffer, 600, 500, 150, 80, degrees * degreeToRadiance, White);
 
 				//RenderTexture(&GlobalBackbuffer, 400, 100, &image);
-				//RenderRotatedTexture(&GlobalBackbuffer, 700, 100, &image, degrees * degreeToRadiance);
+				//RenderTexture(&GlobalBackbuffer, 400, 400, &partOfImage);
+
+				RenderRotatedTexture(&GlobalBackbuffer, 700, 100, &image, degrees * degreeToRadiance);
+				RenderRotatedTexture(&GlobalBackbuffer, 700, 400, &partOfImage, degrees * degreeToRadiance);
 
 				//RenderSphere(&GlobalBackbuffer, 200, 500, 50, White);
 
-				RenderLine(&GlobalBackbuffer, v2(300,300), v2(400, 400), 10, Red);
 
 				HDC DeviceContext = GetDC(Window); //REMEMBER DeviceContext is a copy and MUST be Released later or MEMORY LEAK
 
