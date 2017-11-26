@@ -111,12 +111,50 @@ struct v2
 	{
 		//float sum = this->Length();
 		//return v2(x/sum,y/sum);
-		float length = sqrt(x*x) + sqrt(y*y); 
+		float length = this->Length(); 
 		return v2(x / length, y / length);
 	}
 	float Length()
 	{
-		return fabs(x) + fabs(y);
+		return sqrt(x*x + y*y); 
+	}
+	float LengthPow2()
+	{
+		return x*x + y*y; 
+	}
+	v2 projectOnto(v2 a)
+	{
+		v2 result;
+		float magnitude = 0;
+		float dot = 0;
+
+		dot = this->Dot(a);
+		magnitude = a.x * a.x + a.y * a.y;
+
+		return result = a.Scale(dot/magnitude);
+
+	}
+	v2 projectOntoClamped(v2 a)
+	{
+		v2 result;
+		float lengthOfA = a.Length();
+		float magnitude = 0;
+		float dot = 0;
+
+		dot = this->Dot(a);
+		magnitude = a.x * a.x + a.y * a.y;
+		float scalar = dot/magnitude;
+		if(scalar < 0)
+		{
+			scalar = 0;
+		}
+		else if(scalar > 1.0)
+		{
+			scalar = 1.0;
+		}
+
+		return result = a.Scale(scalar);
+
 	}
 
 	v2& operator=(const v2& a)
@@ -310,6 +348,7 @@ RenderRotatedBox(win32_offscreen_buffer *Buffer, int srcX, int srcY, int width, 
 internal void
 RenderSphere(win32_offscreen_buffer *Buffer, int srcX, int srcY, int radius, Win32_color color)
 {
+	int radius2 = radius * radius;
 	v2 center;
 	center.x = srcX + radius;
 	center.y = srcY + radius;
@@ -330,7 +369,7 @@ RenderSphere(win32_offscreen_buffer *Buffer, int srcX, int srcY, int radius, Win
 			v2 vecToPixel;
 			vecToPixel.x = x - center.x;
 			vecToPixel.y = y - center.y;
-			if((vecToPixel.x * vecToPixel.x + vecToPixel.y * vecToPixel.y) <radius * radius)
+			if(vecToPixel.LengthPow2() <radius2)
 			{
 				*Pixel = (color.Red << 16 | color.Green << 8 | color.Blue);
 			}
@@ -348,10 +387,9 @@ RenderLine(win32_offscreen_buffer * Buffer, v2 startPoint, v2 endPoint, int widt
 	v2 maxXY;
 	v2 lineDir;
 
-	//lineDir.x = endPoint.x - startPoint.x;
-	//lineDir.y = endPoint.y - startPoint.y;
+	int width2 = width * width;
+
 	lineDir = endPoint-startPoint;
-	lineDir = lineDir.Normalize();
 
 
 	minXY.x = ((startPoint.x - width < endPoint.x - width) ? (startPoint.x - width) : (endPoint.x - width));
@@ -359,7 +397,6 @@ RenderLine(win32_offscreen_buffer * Buffer, v2 startPoint, v2 endPoint, int widt
 
 	maxXY.x = ((startPoint.x + width > endPoint.x + width) ? (startPoint.x + width) : (endPoint.x + width));
 	maxXY.y = ((startPoint.y + width > endPoint.y + width) ? (startPoint.y + width) : (endPoint.y + width));
-
 
 	uint8 *Row = (uint8 *)Buffer->Memory;
 	Row += ((int)minXY.y * Buffer->Pitch) + ((int)minXY.x * Buffer->BytesPerPixel);
@@ -373,15 +410,11 @@ RenderLine(win32_offscreen_buffer * Buffer, v2 startPoint, v2 endPoint, int widt
 			vecToPixel.x = x - startPoint.x;
 			vecToPixel.y = y - startPoint.y;
 
-			float dot = vecToPixel.Dot(lineDir);
-			v2 vecToPixelProjected = lineDir.Scale(dot);
+			v2 vecToPixelProjected = vecToPixel.projectOntoClamped(lineDir);
 
 			v2 vecToLine = vecToPixel-vecToPixelProjected;
 
-			int test = vecToLine.Length();
-
-			*Pixel = (test << 16 | test << 8 | test);
-			if(vecToLine.Length() < width)
+			if(vecToLine.LengthPow2() < width2)
 			{
 				*Pixel = (color.Red << 16 | color.Green << 8 | color.Blue);
 			}
@@ -393,20 +426,23 @@ RenderLine(win32_offscreen_buffer * Buffer, v2 startPoint, v2 endPoint, int widt
 }
 
 internal void
-RenderTexture(win32_offscreen_buffer *Buffer, int srcX, int srcY, struct Image* image)
+RenderTexture(win32_offscreen_buffer *Buffer, int srcX, int srcY, float scale, struct Image* image)
 {
 	uint8 *Row = (uint8 *)Buffer->Memory;	
 	Row += (srcY * Buffer->Pitch) + (srcX * Buffer->BytesPerPixel);
 
+	int width = image->width * scale;
+	int height = image->height * scale;
+
 	int pixelIndex = 0;
-	for (int y = 0; y < image->height; ++y)
+	for (int y = 0; y < height; ++y)
 	{
 		uint32 *Pixel = (uint32*)Row;
-		for (int x = 0; x < image->width; ++x)
+		for (int x = 0; x < width; ++x)
 		{
 				if(x + srcX >= 0 && x + srcX < Buffer->Width && y + srcY >= 0 && y + srcY < Buffer->Height)
 				{
-					pixelIndex = (y * image->pitch) + x;
+					pixelIndex = ((int)(y / scale) * image->pitch) + (int)(x / scale);
 					*Pixel = (image->data[pixelIndex].r << 16 | image->data[pixelIndex].g << 8 | image->data[pixelIndex].b);
 					Pixel++;
 				}
@@ -417,7 +453,7 @@ RenderTexture(win32_offscreen_buffer *Buffer, int srcX, int srcY, struct Image* 
 }
 
 internal void 
-RenderRotatedTexture(win32_offscreen_buffer *Buffer, int srcX, int srcY, struct Image* image, double radi)
+RenderRotatedTexture(win32_offscreen_buffer *Buffer, int srcX, int srcY, float scale, struct Image* image, double radi)
 {
 
 	v2 rigthAxis;
@@ -428,18 +464,22 @@ RenderRotatedTexture(win32_offscreen_buffer *Buffer, int srcX, int srcY, struct 
 	upAxis.x = cos(radi + (3.14 / 2.0));
 	upAxis.y = sin(radi + (3.14 / 2.0));
 
+
+	int width = image->width * scale;
+	int height = image->height * scale;
+
 	v2 corners[4];
 	corners[0].x = srcX;
 	corners[0].y = srcY;
 
-	corners[1].x = corners[0].x + (rigthAxis.x * image->width);
-	corners[1].y = corners[0].y + (rigthAxis.y * image->width);
+	corners[1].x = corners[0].x + (rigthAxis.x * width);
+	corners[1].y = corners[0].y + (rigthAxis.y * width);
 
-	corners[2].x = corners[0].x + (upAxis.x * image->height);
-	corners[2].y = corners[0].y + (upAxis.y * image->height);
+	corners[2].x = corners[0].x + (upAxis.x * height);
+	corners[2].y = corners[0].y + (upAxis.y * height);
 
-	corners[3].x = corners[0].x + (rigthAxis.x * image->width) + (upAxis.x * image->height);
-	corners[3].y = corners[0].y + (rigthAxis.y * image->width) + (upAxis.y * image->height);
+	corners[3].x = corners[0].x + (rigthAxis.x * width) + (upAxis.x * height);
+	corners[3].y = corners[0].y + (rigthAxis.y * width) + (upAxis.y * height);
 
 	v2 minXY;
 	minXY.x = srcX;
@@ -480,12 +520,12 @@ RenderRotatedTexture(win32_offscreen_buffer *Buffer, int srcX, int srcY, struct 
 			vecToPixel.x = x - corners[0].x;
 			vecToPixel.y = y - corners[0].y;
 			float rightDot = vecToPixel.Dot(rigthAxis);
-			if(rightDot <= image->width && rightDot >= 0)
+			if(rightDot <= width && rightDot >= 0 && x >= 0 && x < Buffer->Width)
 			{
 				float upDot = vecToPixel.Dot(upAxis);
-				if(upDot <= image->height && upDot >= 0)
+				if(upDot <= height && upDot >= 0 && y >= 0 && y < Buffer->Height)
 				{
-					int pixelIndex = ((int)upDot * image->pitch) + (int)rightDot;
+					int pixelIndex = ((int)(upDot / scale) * image->pitch) + (int)(rightDot / scale);
 					*Pixel = (image->data[pixelIndex].r << 16 | image->data[pixelIndex].g << 8 | image->data[pixelIndex].b);
 				}
 			}
@@ -716,6 +756,7 @@ WinMain(HINSTANCE Instance,
 			int XOffset = 0;
 			int YOffset = 0;
 			int y = 300;
+			float scale = 1.0;
 			double degrees = 0.0f;
 			double degreeToRadiance = (3.14 / 180.0);
 
@@ -782,14 +823,15 @@ WinMain(HINSTANCE Instance,
 				
 				//RenderRotatedBox(&GlobalBackbuffer, 600, 500, 150, 80, degrees * degreeToRadiance, White);
 
-				//RenderTexture(&GlobalBackbuffer, 400, 100, &image);
-				//RenderTexture(&GlobalBackbuffer, 400, 400, &partOfImage);
+				RenderTexture(&GlobalBackbuffer, 400, 100, scale, &image);
+				RenderTexture(&GlobalBackbuffer, 400, 400, scale, &partOfImage);
 
-				RenderRotatedTexture(&GlobalBackbuffer, 700, 100, &image, degrees * degreeToRadiance);
-				RenderRotatedTexture(&GlobalBackbuffer, 700, 400, &partOfImage, degrees * degreeToRadiance);
+				RenderRotatedTexture(&GlobalBackbuffer, 700, 100, scale, &image, degrees * degreeToRadiance);
+				RenderRotatedTexture(&GlobalBackbuffer, 700, 400, scale, &partOfImage, degrees * degreeToRadiance);
 
 				//RenderSphere(&GlobalBackbuffer, 200, 500, 50, White);
 
+				//RenderLine(&GlobalBackbuffer, v2(200,200),v2(300,y),10,Red);
 
 				HDC DeviceContext = GetDC(Window); //REMEMBER DeviceContext is a copy and MUST be Released later or MEMORY LEAK
 
@@ -798,10 +840,17 @@ WinMain(HINSTANCE Instance,
 						Dimension.Width, Dimension.Height);
 				XOffset++;
 				//YOffset++;
-				y++;
-				if(y > 400)
+
+				scale += 0.001f;
+				if(scale > 2.0)
 				{
-					y = 200;
+					scale = 0.5;
+				}
+
+				y++;
+				if(y > 300)
+				{
+					y = 100;
 				}
 				degrees += 0.1;
 				ReleaseDC(Window, DeviceContext);
