@@ -4,3 +4,6 @@
 *.pdb
 *.obj
 Old/win32_window.cpp
+*.dll
+*.exp
+*.lib
