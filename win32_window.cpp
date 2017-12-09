@@ -820,14 +820,15 @@ WinMain(HINSTANCE Instance,
 				Red.Blue = 0;			
 
 				RenderAlignedBox(&GlobalBackbuffer, 0, 0, 1280, 720, Black);
+				RenderAlignedBox(&GlobalBackbuffer, 100, 100, 200, 100, White);
 				
 				//RenderRotatedBox(&GlobalBackbuffer, 600, 500, 150, 80, degrees * degreeToRadiance, White);
 
-				RenderTexture(&GlobalBackbuffer, 400, 100, scale, &image);
-				RenderTexture(&GlobalBackbuffer, 400, 400, scale, &partOfImage);
+				//RenderTexture(&GlobalBackbuffer, 400, 100, scale, &image);
+				//RenderTexture(&GlobalBackbuffer, 400, 400, scale, &partOfImage);
 
-				RenderRotatedTexture(&GlobalBackbuffer, 700, 100, scale, &image, degrees * degreeToRadiance);
-				RenderRotatedTexture(&GlobalBackbuffer, 700, 400, scale, &partOfImage, degrees * degreeToRadiance);
+				//RenderRotatedTexture(&GlobalBackbuffer, 700, 100, scale, &image, degrees * degreeToRadiance);
+				//RenderRotatedTexture(&GlobalBackbuffer, 700, 400, scale, &partOfImage, degrees * degreeToRadiance);
 
 				//RenderSphere(&GlobalBackbuffer, 200, 500, 50, White);
 

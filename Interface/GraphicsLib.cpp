@@ -45,25 +45,30 @@ namespace GraphicsLib
 		}
 	}
 
-	void Functions::RenderAlignedBox(win32_offscreen_buffer *buffer, v2 position, int width, int height, win32_color color)
-	{
-		if(position.y < 0)
+	void Functions::RenderAlignedBox(win32_offscreen_buffer *buffer, v2 position, AABB box, win32_color color)
+	{		
+		v2 startPoint(position.x - box.width, position.y - box.height);
+		v2 endPoint(position.x + box.width, position.y + box.height);
+		
+		if(startPoint.y < 0)
 		{
-			position.y = 0;
+			startPoint.y = 0;
 		}
-		if(position.x < 0)
+		if(startPoint.x < 0)
 		{
-			position.x = 0;
+			startPoint.x = 0;
 		}
+		
 		uint8 *row = (uint8 *)buffer->memory;
-		row += (int)(position.y * buffer->pitch);
-		row += (int)(position.x * buffer->bytesPerPixel);
-		for(int y = position.y; y < height; y++)
+		row += (int)(startPoint.y * buffer->pitch);
+		row += (int)(startPoint.x * buffer->bytesPerPixel);
+		
+		for(int y = startPoint.y; y < endPoint.y; y++)
 		{
-			if(y < buffer->height)
+			if(y >= 0 && y < buffer->height)
 			{
 				uint32 *pixel = (uint32*)row;
-				for(int x = position.x; x < width && x < buffer->width; x++)
+				for(int x = startPoint.x; x < endPoint.x && x < buffer->width; x++)
 				{
 					*pixel++ = (color.red << 16 | color.green << 8 | color.blue);	
 				}
@@ -72,28 +77,21 @@ namespace GraphicsLib
 		}
 	}
 
-	void Functions::RenderRotatedBox(win32_offscreen_buffer *buffer, v2 position, int width, int height, double radi, win32_color color)
+	void Functions::RenderRotatedBox(win32_offscreen_buffer *buffer, v2 position, OBB box, win32_color color)
 	{
-		v2 rigthAxis;
-		rigthAxis.x = cos(radi);
-		rigthAxis.y = sin(radi);
+		v2 rightAxis = box.rightAxis;
+		//rigthAxis.x = cos(radi);
+		//rigthAxis.y = sin(radi);
 
-		v2 upAxis;
-		upAxis.x = cos(radi + (3.14 / 2.0));
-		upAxis.y = sin(radi + (3.14 / 2.0));
+		v2 upAxis = box.upAxis;
+		//upAxis.x = cos(radi + (3.14 / 2.0));
+		//upAxis.y = sin(radi + (3.14 / 2.0));
 
 		v2 corners[4];
-		corners[0].x = position.x;
-		corners[0].y = position.y;
-
-		corners[1].x = corners[0].x + (rigthAxis.x * width);
-		corners[1].y = corners[0].y + (rigthAxis.y * width);
-
-		corners[2].x = corners[0].x + (upAxis.x * height);
-		corners[2].y = corners[0].y + (upAxis.y * height);
-
-		corners[3].x = corners[0].x + (rigthAxis.x * width) + (upAxis.x * height);
-		corners[3].y = corners[0].y + (rigthAxis.y * width) + (upAxis.y * height);
+		corners[0] = position + rightAxis.Scale(box.width) + upAxis.Scale(box.height);
+		corners[1] = position + rightAxis.Scale(box.width) + upAxis.Scale(-box.height);
+		corners[2] = position + rightAxis.Scale(-box.width) + upAxis.Scale(box.height);
+		corners[3] = position + rightAxis.Scale(-box.width) + upAxis.Scale(-box.height);
 
 		v2 minXY;
 		minXY.x = position.x;
@@ -148,13 +146,13 @@ namespace GraphicsLib
 			for (int x = minXY.x; x < maxXY.x; ++x)
 			{
 				v2 vecToPixel;
-				vecToPixel.x = x - corners[0].x;
-				vecToPixel.y = y - corners[0].y;
-				float rightDot = vecToPixel.Dot(rigthAxis);
-				if(rightDot <= width && rightDot >= 0)
+				vecToPixel.x = x - position.x;
+				vecToPixel.y = y - position.y;
+				float rightDot = vecToPixel.Dot(rightAxis);
+				if(rightDot <= box.width && rightDot >= -box.width)
 				{
 					float upDot = vecToPixel.Dot(upAxis);
-					if(upDot <= height && upDot >= 0)
+					if(upDot <= box.height && upDot >= -box.height)
 					{
 						*pixel = (color.red << 16 | color.green << 8 | color.blue);
 					}

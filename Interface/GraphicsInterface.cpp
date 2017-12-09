@@ -1,4 +1,5 @@
 #include "GraphicsLib.h"
+//#include "MathLib.h"
 
 // compile with cl -Zi /EHsc GraphicsInterface.cpp /link GraphicsLib.lib
 
@@ -10,6 +11,7 @@ using namespace GraphicsLib;
 
 global_variable bool running;
 global_variable win32_offscreen_buffer GlobalBackbuffer;
+struct v2 pos(0,0);
 
 win32_window_dimension Win32GetWindowDimension(HWND window)
 	{
@@ -62,6 +64,25 @@ Win32MainWindowCallBack(HWND	Window,
 		case WM_SYSKEYDOWN:
 		case WM_SYSKEYUP:
 		case WM_KEYDOWN:
+		{
+			uint32_t VKCode = WParam;
+			if(VKCode == VK_UP)
+			{
+				pos.y += 10;
+			}
+			if(VKCode == VK_LEFT)
+			{
+				pos.x -= 10;
+			}
+			if(VKCode == VK_DOWN)
+			{
+				pos.y -= 10;
+			}
+			if(VKCode == VK_RIGHT)
+			{
+				pos.x += 10;
+			}
+		}
 		case WM_KEYUP:
 		{
 			uint32_t VKCode = WParam;
@@ -186,6 +207,14 @@ int CALLBACK WinMain(HINSTANCE Instance,
 			float scale = 1.0;
 			double degrees = 0.0f;
 			double degreeToRadiance = (3.14 / 180.0);
+			
+			struct v2 pos2(400,400);
+			struct AABB aabb1(100,100);
+			struct AABB aabb2(50,100);
+			
+			float rotation = 0 * degreeToRadiance;
+			
+			struct OBB obb (v2(cos(rotation), sin(rotation)),v2(cos(rotation + 3.14 / 2), sin(rotation + 3.14 / 2)),50,50);
 
 			running = true;
 			while(running)
@@ -200,37 +229,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
 					TranslateMessage(&Message);
 					DispatchMessage(&Message);
 				}
-				/*for (DWORD ControllerIndex=0; ControllerIndex< XUSER_MAX_COUNT; ControllerIndex++ )
-				{
-					//gamepad input 
-					XINPUT_STATE ControllerState;
-					if(XInputGetState(ControllerIndex,&ControllerState) == ERROR_SUCCESS)
-					{
-						//controller is plugged in
-						XINPUT_GAMEPAD *Pad = &ControllerState.Gamepad;
 
-						bool Up = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_UP);
-						bool Down = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
-						bool Left = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
-						bool Right = (Pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
-						bool Start = (Pad->wButtons & XINPUT_GAMEPAD_START);
-						bool Back = (Pad->wButtons & XINPUT_GAMEPAD_BACK);
-						bool LeftShoulder = (Pad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
-						bool RightShoulder = (Pad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
-						bool AButton = (Pad->wButtons & XINPUT_GAMEPAD_A);
-						bool BButton = (Pad->wButtons & XINPUT_GAMEPAD_B);
-						bool XButton = (Pad->wButtons & XINPUT_GAMEPAD_X);
-						bool YButton = (Pad->wButtons & XINPUT_GAMEPAD_Y);
-
-						int16 StickX = Pad->sThumbLX;
-						int16 StickY = Pad->sThumbLY;
-					}
-					else
-					{
-						//controller note available
-					}
-
-				}*/
 
 				win32_color White;
 				White.red = 255;
@@ -245,9 +244,22 @@ int CALLBACK WinMain(HINSTANCE Instance,
 				Red.green = 0;
 				Red.blue = 0;			
 
-				GraphicsLib::Functions::RenderAlignedBox(&GlobalBackbuffer, v2(-1, 0), 1281, 720, Black);
+				GraphicsLib::Functions::RenderAlignedBox(&GlobalBackbuffer, v2(640, 360), AABB(1280, 720), Black);
 				
-				GraphicsLib::Functions::RenderRotatedBox(&GlobalBackbuffer, v2(1200, 50), 150, 80, degrees * degreeToRadiance, White);
+				GraphicsLib::Functions::RenderAlignedBox(&GlobalBackbuffer, pos2, aabb1, White);
+				
+				/*if(!aabb1.AABBvsAABBTest(aabb2, pos-pos2))
+				{
+					GraphicsLib::Functions::RenderAlignedBox(&GlobalBackbuffer, pos, aabb2, White);
+				}*/
+				if(!aabb1.AABBvsOBBTest(obb, pos2-pos))
+				{
+					GraphicsLib::Functions::RenderRotatedBox(&GlobalBackbuffer, pos, obb, White);
+				}
+				
+				
+				
+				/*GraphicsLib::Functions::RenderRotatedBox(&GlobalBackbuffer, v2(1200, 50), 150, 80, degrees * degreeToRadiance, White);
 
 				GraphicsLib::Functions::RenderTexture(&GlobalBackbuffer, v2(1200, 100), scale, &image_data);
 				GraphicsLib::Functions::RenderTexture(&GlobalBackbuffer, v2(1200, 400), scale, &partOfImage_data);
@@ -257,7 +269,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
 
 				GraphicsLib::Functions::RenderSphere(&GlobalBackbuffer, v2(-50, -50), 50, White);
 
-				GraphicsLib::Functions::RenderLine(&GlobalBackbuffer, v2(200,200),v2(300,y),10,Red);
+				GraphicsLib::Functions::RenderLine(&GlobalBackbuffer, v2(200,200),v2(300,y),10,Red);*/
 
 				HDC DeviceContext = GetDC(Window); //REMEMBER DeviceContext is a copy and MUST be Released later or MEMORY LEAK
 
