@@ -174,10 +174,10 @@ struct AABB
 		axises[3] = obb.upAxis;
 		
 		v2 AABBCorners[4];
-		AABBCorners[0] = width + height;
-		AABBCorners[1] = width - height;
-		AABBCorners[2] = -width + height;
-		AABBCorners[3] = -width - height;
+		AABBCorners[0] = v2(width, height);
+		AABBCorners[1] = v2(width, -height);
+		AABBCorners[2] = v2(-width, height);
+		AABBCorners[3] = v2(-width, -height);
 		
 		v2 OBBCorners[4];
 		OBBCorners[0] = toOBBVec + (obb.rightAxis.Scale(obb.width) + obb.upAxis.Scale(obb.height));
@@ -195,7 +195,7 @@ struct AABB
 			
 			for(int w = 0; w < 4; w++)
 			{
-				float aabbDot = axises[i].Dot(AABBCorners[w]);
+				float aabbDot = AABBCorners[w].Dot(axises[i]);
 				if(aabbDot > AABBMaxProjection)
 				{
 					AABBMaxProjection = aabbDot;
@@ -205,7 +205,7 @@ struct AABB
 					AABBMinProjection = aabbDot;
 				}
 				
-				float obbDot = axises[i].Dot(OBBCorners[w]);
+				float obbDot = OBBCorners[w].Dot(axises[i]);
 				if(obbDot > OBBMaxProjection)
 				{
 					OBBMaxProjection = obbDot;

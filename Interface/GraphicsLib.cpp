@@ -163,18 +163,18 @@ namespace GraphicsLib
 		}
 	}
 
-	void Functions::RenderSphere(win32_offscreen_buffer *buffer, v2 position, int radius, win32_color color)
+	void Functions::RenderSphere(win32_offscreen_buffer *buffer, v2 position, Sphere spehere, win32_color color)
 	{
-		int radius2 = radius * radius;
+		int radius2 = spehere.radius * spehere.radius;
 		v2 center;
-		center.x = position.x + radius;
-		center.y = position.y + radius;
+		center.x = position.x;
+		center.y = position.y;
 		v2 start;
-		start.x = position.x;
-		start.y = position.y;
+		start.x = position.x - spehere.radius;
+		start.y = position.y - spehere.radius;
 		v2 end;
-		end.x = position.x + radius * 2;
-		end.y = position.y + radius * 2;
+		end.x = position.x + spehere.radius;
+		end.y = position.y + spehere.radius;
 		
 		if(start.x < 0)
 		{
@@ -276,23 +276,38 @@ namespace GraphicsLib
 
 	}
 
-	void Functions::RenderTexture(win32_offscreen_buffer *buffer, v2 position, float scale, struct image* image)
+	void Functions::RenderTexture(win32_offscreen_buffer *buffer, v2 position, struct image* image, AABB box)
 	{
+		float widthScale = (box.width * 2) / image->width;
+		float heightScale = (box.height * 2) / image->height;
+		
+		int width = box.width * 2;
+		int height = box.height * 2;
+
+		v2 startPoint(position.x - box.width, position.y - box.height);
+		v2 endPoint(position.x + box.width, position.y + box.height);
+		
+		if(startPoint.y < 0)
+		{
+			startPoint.y = 0;
+		}
+		if(startPoint.x < 0)
+		{
+			startPoint.x = 0;
+		}
+		
 		uint8 *row = (uint8 *)buffer->memory;	
-		row += ((int)position.y * buffer->pitch) + ((int)position.x * buffer->bytesPerPixel);
-
-		int width = image->width * scale;
-		int height = image->height * scale;
-
+		row += ((int)startPoint.y * buffer->pitch) + ((int)startPoint.x * buffer->bytesPerPixel);
+		
 		int pixelIndex = 0;
 		for (int y = 0; y < height; ++y)
 		{
 			uint32 *pixel = (uint32*)row;
 			for (int x = 0; x < width; ++x)
 			{
-					if(x + position.x >= 0 && x + position.x < buffer->width && y + position.y >= 0 && y + position.y < buffer->height)
+					if(x < buffer->width && y < buffer->height)
 					{
-						pixelIndex = ((int)(y / scale) * image->pitch) + (int)(x / scale);
+						pixelIndex = ((int)(y / heightScale) * image->pitch) + (int)(x / widthScale);
 						*pixel = (image->data[pixelIndex].r << 16 | image->data[pixelIndex].g << 8 | image->data[pixelIndex].b);
 						pixel++;
 					}
@@ -302,33 +317,27 @@ namespace GraphicsLib
 		}
 	}
 
-	void Functions::RenderRotatedTexture(win32_offscreen_buffer *buffer, v2 position, float scale, struct image* image, double radi)
+	void Functions::RenderRotatedTexture(win32_offscreen_buffer *buffer, v2 position, struct image* image, OBB box)
 	{
 
-		v2 rigthAxis;
-		rigthAxis.x = cos(radi);
-		rigthAxis.y = sin(radi);
+		v2 rightAxis;
+		rightAxis = box.rightAxis;
 
 		v2 upAxis;
-		upAxis.x = cos(radi + (3.14 / 2.0));
-		upAxis.y = sin(radi + (3.14 / 2.0));
+		upAxis = box.upAxis;
 
+		float widthScale = (box.width * 2) / image->width;
+		float heightScale = (box.height * 2) / image->height;
 
-		int width = image->width * scale;
-		int height = image->height * scale;
+		int width = box.width * 2;
+		int height = box.height * 2;
 
 		v2 corners[4];
-		corners[0].x = position.x;
-		corners[0].y = position.y;
+		corners[0] = position + rightAxis.Scale(box.width) + upAxis.Scale(box.height);
+		corners[1] = position + rightAxis.Scale(box.width) + upAxis.Scale(-box.height);
+		corners[2] = position + rightAxis.Scale(-box.width) + upAxis.Scale(box.height);
+		corners[3] = position + rightAxis.Scale(-box.width) + upAxis.Scale(-box.height);
 
-		corners[1].x = corners[0].x + (rigthAxis.x * width);
-		corners[1].y = corners[0].y + (rigthAxis.y * width);
-
-		corners[2].x = corners[0].x + (upAxis.x * height);
-		corners[2].y = corners[0].y + (upAxis.y * height);
-
-		corners[3].x = corners[0].x + (rigthAxis.x * width) + (upAxis.x * height);
-		corners[3].y = corners[0].y + (rigthAxis.y * width) + (upAxis.y * height);
 
 		v2 minXY;
 		minXY.x = position.x;
@@ -366,15 +375,15 @@ namespace GraphicsLib
 			for (int x = minXY.x; x < maxXY.x; ++x)
 			{
 				v2 vecToPixel;
-				vecToPixel.x = x - corners[0].x;
-				vecToPixel.y = y - corners[0].y;
-				float rightDot = vecToPixel.Dot(rigthAxis);
+				vecToPixel.x = x - corners[3].x;
+				vecToPixel.y = y - corners[3].y;
+				float rightDot = vecToPixel.Dot(rightAxis);
 				if(rightDot <= width && rightDot >= 0 && x >= 0 && x < buffer->width)
 				{
 					float upDot = vecToPixel.Dot(upAxis);
 					if(upDot <= height && upDot >= 0 && y >= 0 && y < buffer->height)
 					{
-						int pixelIndex = ((int)(upDot / scale) * image->pitch) + (int)(rightDot / scale);
+						int pixelIndex = ((int)(upDot / heightScale) * image->pitch) + (int)(rightDot / widthScale);
 						*pixel = (image->data[pixelIndex].r << 16 | image->data[pixelIndex].g << 8 | image->data[pixelIndex].b);
 					}
 				}

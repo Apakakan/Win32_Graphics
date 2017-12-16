@@ -1,5 +1,5 @@
 #include "GraphicsLib.h"
-//#include "MathLib.h"
+
 
 // compile with cl -Zi /EHsc GraphicsInterface.cpp /link GraphicsLib.lib
 
@@ -66,21 +66,37 @@ Win32MainWindowCallBack(HWND	Window,
 		case WM_KEYDOWN:
 		{
 			uint32_t VKCode = WParam;
+			if(VKCode == 'W')
+			{
+				pos.y += 20;
+			}
+			if(VKCode == 'A')
+			{
+				pos.x -= 20;
+			}
+			if(VKCode == 'S')
+			{
+				pos.y -= 20;
+			}
+			if(VKCode == 'D')
+			{
+				pos.x += 20;
+			}
 			if(VKCode == VK_UP)
 			{
-				pos.y += 10;
+				pos.y += 1;
 			}
 			if(VKCode == VK_LEFT)
 			{
-				pos.x -= 10;
+				pos.x -= 1;
 			}
 			if(VKCode == VK_DOWN)
 			{
-				pos.y -= 10;
+				pos.y -= 1;
 			}
 			if(VKCode == VK_RIGHT)
 			{
-				pos.x += 10;
+				pos.x += 1;
 			}
 		}
 		case WM_KEYUP:
@@ -212,7 +228,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
 			struct AABB aabb1(100,100);
 			struct AABB aabb2(50,100);
 			
-			float rotation = 0 * degreeToRadiance;
+			float rotation = 45 * degreeToRadiance;
 			
 			struct OBB obb (v2(cos(rotation), sin(rotation)),v2(cos(rotation + 3.14 / 2), sin(rotation + 3.14 / 2)),50,50);
 
@@ -246,7 +262,8 @@ int CALLBACK WinMain(HINSTANCE Instance,
 
 				GraphicsLib::Functions::RenderAlignedBox(&GlobalBackbuffer, v2(640, 360), AABB(1280, 720), Black);
 				
-				GraphicsLib::Functions::RenderAlignedBox(&GlobalBackbuffer, pos2, aabb1, White);
+				//GraphicsLib::Functions::RenderAlignedBox(&GlobalBackbuffer, pos2, aabb1, White);
+				GraphicsLib::Functions::RenderTexture(&GlobalBackbuffer, pos2, &image_data, aabb1);
 				
 				/*if(!aabb1.AABBvsAABBTest(aabb2, pos-pos2))
 				{
@@ -254,22 +271,9 @@ int CALLBACK WinMain(HINSTANCE Instance,
 				}*/
 				if(!aabb1.AABBvsOBBTest(obb, pos2-pos))
 				{
-					GraphicsLib::Functions::RenderRotatedBox(&GlobalBackbuffer, pos, obb, White);
+					//GraphicsLib::Functions::RenderRotatedBox(&GlobalBackbuffer, pos, obb, White);
+					GraphicsLib::Functions::RenderRotatedTexture(&GlobalBackbuffer, pos, &image_data, obb);
 				}
-				
-				
-				
-				/*GraphicsLib::Functions::RenderRotatedBox(&GlobalBackbuffer, v2(1200, 50), 150, 80, degrees * degreeToRadiance, White);
-
-				GraphicsLib::Functions::RenderTexture(&GlobalBackbuffer, v2(1200, 100), scale, &image_data);
-				GraphicsLib::Functions::RenderTexture(&GlobalBackbuffer, v2(1200, 400), scale, &partOfImage_data);
-
-				GraphicsLib::Functions::RenderRotatedTexture(&GlobalBackbuffer, v2(700, 100), scale, &image_data, degrees * degreeToRadiance);
-				GraphicsLib::Functions::RenderRotatedTexture(&GlobalBackbuffer, v2(700, 400), scale, &partOfImage_data, degrees * degreeToRadiance);
-
-				GraphicsLib::Functions::RenderSphere(&GlobalBackbuffer, v2(-50, -50), 50, White);
-
-				GraphicsLib::Functions::RenderLine(&GlobalBackbuffer, v2(200,200),v2(300,y),10,Red);*/
 
 				HDC DeviceContext = GetDC(Window); //REMEMBER DeviceContext is a copy and MUST be Released later or MEMORY LEAK
 
