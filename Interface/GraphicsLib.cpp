@@ -12,10 +12,6 @@ typedef uint16_t uint16;
 typedef uint32_t uint32;
 typedef uint64_t uint64;
 
-//Compile by using: cl /EHsc /DGRAPHICSLIB_EXPORTS /LD GraphicsLib.cpp
-//cl -Zi ..\win32_window.cpp user32.lib Gdi32.lib /link /out:program.exe
-//cl -Zi /EHsc //DGRAPHICSLIB_EXPORTS /LD GraphicsLib.cpp user32.lib Gdi32.lib
-
 namespace GraphicsLib
 {
 	
@@ -44,7 +40,7 @@ namespace GraphicsLib
 			OutputDebugStringA("Error in open file\n");
 		}
 	}
-
+	
 	void Functions::RenderAlignedBox(win32_offscreen_buffer *buffer, v2 position, AABB box, win32_color color)
 	{		
 		v2 startPoint(position.x - box.width, position.y - box.height);

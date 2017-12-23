@@ -269,7 +269,7 @@ int CALLBACK WinMain(HINSTANCE Instance,
 				{
 					GraphicsLib::Functions::RenderAlignedBox(&GlobalBackbuffer, pos, aabb2, White);
 				}*/
-				if(!aabb1.AABBvsOBBTest(obb, pos2-pos))
+				if(!MathLib::IntersectionTest::AABBvsOBB(aabb1,obb,pos2-pos))
 				{
 					//GraphicsLib::Functions::RenderRotatedBox(&GlobalBackbuffer, pos, obb, White);
 					GraphicsLib::Functions::RenderRotatedTexture(&GlobalBackbuffer, pos, &image_data, obb);
