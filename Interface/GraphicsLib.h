@@ -60,7 +60,7 @@ namespace GraphicsLib
 
 			static GRAPHICSLIB_API void RenderSphere(win32_offscreen_buffer *buffer, v2 position, Sphere sphere, win32_color color);
 
-			static GRAPHICSLIB_API void RenderLine(win32_offscreen_buffer * buffer, v2 startPoint, v2 endPoint, int width, win32_color color);
+			static GRAPHICSLIB_API void RenderLine(win32_offscreen_buffer * buffer, Line line, win32_color color);
 
 			static GRAPHICSLIB_API void RenderTexture(win32_offscreen_buffer *buffer, v2 position, struct image* image, AABB box);
 

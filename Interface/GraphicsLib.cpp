@@ -211,14 +211,18 @@ namespace GraphicsLib
 		}
 	}
 
-	void Functions::RenderLine(win32_offscreen_buffer * buffer, v2 startPoint, v2 endPoint, int width, win32_color color)
+	void Functions::RenderLine(win32_offscreen_buffer * buffer, Line line, win32_color color)
 	{
 		v2 minXY;
 		v2 maxXY;
 		v2 lineDir;
-
+		
+		int width = line.width;
 		int width2 = width * width;
 
+		
+		v2 endPoint = line.endPoint;
+		v2 startPoint = line.startPoint;
 		lineDir = endPoint-startPoint;
 
 

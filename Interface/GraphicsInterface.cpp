@@ -231,6 +231,12 @@ int CALLBACK WinMain(HINSTANCE Instance,
 			float rotation = 45 * degreeToRadiance;
 			
 			struct OBB obb (v2(cos(rotation), sin(rotation)),v2(cos(rotation + 3.14 / 2), sin(rotation + 3.14 / 2)),50,50);
+			struct OBB obb2 (v2(cos(rotation), sin(rotation)),v2(cos(rotation + 3.14 / 2), sin(rotation + 3.14 / 2)),100,50);
+			
+			struct Sphere sphere1(10);
+			struct Sphere sphere2(20);
+			
+			struct Line line(pos, pos+(200,200),20);
 
 			running = true;
 			while(running)
@@ -262,19 +268,25 @@ int CALLBACK WinMain(HINSTANCE Instance,
 
 				GraphicsLib::Functions::RenderAlignedBox(&GlobalBackbuffer, v2(640, 360), AABB(1280, 720), Black);
 				
-				//GraphicsLib::Functions::RenderAlignedBox(&GlobalBackbuffer, pos2, aabb1, White);
-				GraphicsLib::Functions::RenderTexture(&GlobalBackbuffer, pos2, &image_data, aabb1);
+				GraphicsLib::Functions::RenderAlignedBox(&GlobalBackbuffer, pos2, aabb1, White);
 				
-				/*if(!aabb1.AABBvsAABBTest(aabb2, pos-pos2))
+				v2 test1(100,0);
+				v2 r = test1.getPerpendicular();
+				
+				v2 test2(100,100);
+				r = test2.getPerpendicular();
+				
+				v2 test3(0,100);
+				r = test3.getPerpendicular();
+				
+				
+				line.endPoint = pos+v2(200,100);
+				line.startPoint = pos;
+				if(!MathLib::IntersectionTest::AABBvsLine(aabb1, line,pos2-pos))
 				{
-					GraphicsLib::Functions::RenderAlignedBox(&GlobalBackbuffer, pos, aabb2, White);
-				}*/
-				if(!MathLib::IntersectionTest::AABBvsOBB(aabb1,obb,pos2-pos))
-				{
-					//GraphicsLib::Functions::RenderRotatedBox(&GlobalBackbuffer, pos, obb, White);
-					GraphicsLib::Functions::RenderRotatedTexture(&GlobalBackbuffer, pos, &image_data, obb);
+					GraphicsLib::Functions::RenderLine(&GlobalBackbuffer, line, White);
 				}
-
+				
 				HDC DeviceContext = GetDC(Window); //REMEMBER DeviceContext is a copy and MUST be Released later or MEMORY LEAK
 
 				win32_window_dimension Dimension = Win32GetWindowDimension(Window);

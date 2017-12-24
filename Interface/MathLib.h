@@ -77,6 +77,29 @@ struct v2
 
 	}
 
+	v2 getPerpendicular()
+	{
+		v2 vecDir = v2(x,y).Normalize();
+		float a[3];
+		a[0] = vecDir.x;
+		a[1] = vecDir.y;
+		a[2] = 0;
+		
+		float b[3];
+		b[0] = 0;
+		b[1] = 0;
+		b[2] = -1;
+		
+		
+		
+		return v2(a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2]).Normalize();
+	}
+	
+	v2 rotate(float radi)
+	{
+		return v2(x*cos(radi)-y*sin(radi),x*sin(radi)+y*cos(radi));
+	}
+	
 	v2& operator=(const v2& a)
 	{
 		x=a.x;
@@ -94,7 +117,7 @@ struct v2
 		return v2(x-a.x,y-a.y);
 	}
 
-	v2 operator==(const v2& a) const
+	bool operator==(const v2& a) const
 	{
 		return (a.x == x && a.y == y);
 	}
@@ -106,6 +129,17 @@ struct Sphere
 	Sphere(float radius)
 	: radius(radius)
 	{}
+	
+	Sphere& operator=(const Sphere& a)
+	{
+		radius = a.radius;
+		return*this;
+	}
+
+	bool operator==(const Sphere& a) const
+	{
+		return (radius == a.radius);
+	}
 };
 struct OBB
 {
@@ -114,118 +148,75 @@ struct OBB
 	OBB(v2 rightAxis, v2 upAxis, float width, float height)
 	: rightAxis(rightAxis), upAxis(upAxis), width(width), height(height)
 	{}
+	
+	OBB& operator=(const OBB& a)
+	{
+		rightAxis = a.rightAxis;
+		upAxis = a.upAxis;
+		width = a.width;
+		height = a.height;
+		return*this;
+	}
+
+	bool operator==(const OBB& a) const
+	{
+		return (rightAxis == a.rightAxis
+		&& upAxis == a.upAxis
+		&& width == a.width
+		&& height == a.height);
+	}
 };
 struct AABB
 {
-		float width,height;
-		
-		AABB(float width, float height)
-		: width(width), height(height)
-		{}
-		/*bool AABBvsAABBTest(AABB box2, v2 diffVec)
-		{
-			bool result = false;
-			
-			if((fabs(diffVec.x) < width + box2.width) && (fabs(diffVec.y) < height + box2.height))
-			{
-				result = true;
-			}
-			
-			return result;
-		}
-		bool AABBvsSphereTest(Sphere sphere, v2 toSphereVec)
-		{
-			bool result = false;
-			
-			v2 pointInBox = toSphereVec;
-			if(pointInBox.x < -width)
-			{
-				pointInBox.x = -width;
-			}
-			if(pointInBox.x > width)
-			{
-				pointInBox.x = width;
-			}
-			if(pointInBox.y < -height)
-			{
-				pointInBox.y = -height;
-			}
-			if(pointInBox.y > height)
-			{
-				pointInBox.y = height;
-			}
-			
-			float distance = (toSphereVec - pointInBox).Length();
-			
-			if(distance < sphere.radius)
-			{
-				result = true;
-			}
-			
-			return result;
-		}
-		bool AABBvsOBBTest(OBB obb, v2 toOBBVec)
-		{
-			
-			v2 axises[4];
-			axises[0] = v2(1,0);
-			axises[1] = v2(0,1);
-			axises[2] = obb.rightAxis;
-			axises[3] = obb.upAxis;
-			
-			v2 AABBCorners[4];
-			AABBCorners[0] = v2(width, height);
-			AABBCorners[1] = v2(width, -height);
-			AABBCorners[2] = v2(-width, height);
-			AABBCorners[3] = v2(-width, -height);
-			
-			v2 OBBCorners[4];
-			OBBCorners[0] = toOBBVec + (obb.rightAxis.Scale(obb.width) + obb.upAxis.Scale(obb.height));
-			OBBCorners[1] = toOBBVec + (obb.rightAxis.Scale(obb.width) + obb.upAxis.Scale(-obb.height));
-			OBBCorners[2] = toOBBVec + (obb.rightAxis.Scale(-obb.width) + obb.upAxis.Scale(obb.height));
-			OBBCorners[3] = toOBBVec + (obb.rightAxis.Scale(-obb.width) + obb.upAxis.Scale(-obb.height));
-			
-			for(int i = 0; i < 4; i++)
-			{
-				float AABBMinProjection = 0;
-				float AABBMaxProjection = 0;
-				
-				float OBBMinProjection = axises[i].Dot(toOBBVec);
-				float OBBMaxProjection = OBBMinProjection;
-				
-				for(int w = 0; w < 4; w++)
-				{
-					float aabbDot = AABBCorners[w].Dot(axises[i]);
-					if(aabbDot > AABBMaxProjection)
-					{
-						AABBMaxProjection = aabbDot;
-					}
-					if(aabbDot < AABBMinProjection)
-					{
-						AABBMinProjection = aabbDot;
-					}
-					
-					float obbDot = OBBCorners[w].Dot(axises[i]);
-					if(obbDot > OBBMaxProjection)
-					{
-						OBBMaxProjection = obbDot;
-					}
-					if(obbDot < OBBMinProjection)
-					{
-						OBBMinProjection = obbDot;
-					}
-				}
-				if((AABBMinProjection > OBBMaxProjection && AABBMinProjection > OBBMinProjection)
-					|| (AABBMaxProjection < OBBMinProjection && AABBMaxProjection < OBBMaxProjection))
-				{
-					return false;
-				}
-				
-			}
-			
-			return true;
-		}*/
-	};
+	float width,height;
+	
+	AABB(float width, float height)
+	: width(width), height(height)
+	{}
+	
+	AABB& operator=(const AABB& a)
+	{
+		width = a.width;
+		height = a.height;
+		return*this;
+	}
+
+	bool operator==(const AABB& a) const
+	{
+		return (width == a.width && height == a.height);
+	}
+};
+struct Line
+{
+	v2 startPoint;
+	v2 endPoint;
+	int width;
+	Line(v2 startPoint,v2 endPoint, int width)
+	: startPoint(startPoint), endPoint(endPoint),width(width)
+	{
+	}
+	
+	v2 getLineDir()
+	{
+		return (endPoint - startPoint).Normalize();
+	}
+	float getLength()
+	{
+		return (endPoint - startPoint).Length();
+	}
+	Line operator=(const Line& a)
+	{
+		startPoint = a.startPoint;
+		endPoint = a.endPoint;
+		width = a.width;
+		return *this;
+	}
+	bool operator==(const Line& a) const
+	{
+		return (startPoint == a.startPoint && endPoint == a.endPoint && width == a.width);
+	}
+};
+
 namespace MathLib
 {
 	class IntersectionTest
@@ -234,9 +225,12 @@ namespace MathLib
 			static MATHLIB_API bool AABBvsAABB(AABB box1, AABB box2, v2 diffVec);
 			static MATHLIB_API bool AABBvsOBB(AABB box1, OBB box2, v2 toOBBVec);
 			static MATHLIB_API bool AABBvsSphere(AABB box, Sphere sphere, v2 toSphereVec);
+			static MATHLIB_API bool AABBvsLine(AABB box, Line line, v2 toAABB);
 			static MATHLIB_API bool OBBvsOBB(OBB box1, OBB box2, v2 diffVec);
 			static MATHLIB_API bool OBBvsSphere(OBB box, Sphere sphere, v2 toSphereVec);
+			static MATHLIB_API bool OBBvsLine(OBB box, Line line, v2 toLineVec);
 			static MATHLIB_API bool SpherevsSphere(Sphere sphere1, Sphere sphere2, v2 diffVec);
+			static MATHLIB_API bool SpherevsLine(Sphere sphere, Line line, v2 toLineVec);
 		
 	};
 }
