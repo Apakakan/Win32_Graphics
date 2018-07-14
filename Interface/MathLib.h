@@ -190,8 +190,8 @@ struct Line
 {
 	v2 startPoint;
 	v2 endPoint;
-	int width;
-	Line(v2 startPoint,v2 endPoint, int width)
+	float width;
+	Line(v2 startPoint,v2 endPoint, float width)
 	: startPoint(startPoint), endPoint(endPoint),width(width)
 	{
 	}
@@ -225,12 +225,13 @@ namespace MathLib
 			static MATHLIB_API bool AABBvsAABB(AABB box1, AABB box2, v2 diffVec);
 			static MATHLIB_API bool AABBvsOBB(AABB box1, OBB box2, v2 toOBBVec);
 			static MATHLIB_API bool AABBvsSphere(AABB box, Sphere sphere, v2 toSphereVec);
-			static MATHLIB_API bool AABBvsLine(AABB box, Line line, v2 toAABB);
+			static MATHLIB_API bool AABBvsLine(AABB box, v2 boxPos, Line line);
 			static MATHLIB_API bool OBBvsOBB(OBB box1, OBB box2, v2 diffVec);
 			static MATHLIB_API bool OBBvsSphere(OBB box, Sphere sphere, v2 toSphereVec);
-			static MATHLIB_API bool OBBvsLine(OBB box, Line line, v2 toLineVec);
+			static MATHLIB_API bool OBBvsLine(OBB box, v2 boxPos, Line line);
 			static MATHLIB_API bool SpherevsSphere(Sphere sphere1, Sphere sphere2, v2 diffVec);
-			static MATHLIB_API bool SpherevsLine(Sphere sphere, Line line, v2 toLineVec);
+			static MATHLIB_API bool SpherevsLine(Sphere sphere,v2 spherePos, Line line);
+			static MATHLIB_API bool LinevsLine(Line line1, Line line2);
 		
 	};
 }

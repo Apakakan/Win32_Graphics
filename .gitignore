@@ -7,3 +7,6 @@ Old/win32_window.cpp
 *.dll
 *.exp
 *.lib
+D3D_Demo/qweqweqwe.txt
+D3D_Demo/D3D11_Demo.VC.VC.opendb
+*.db

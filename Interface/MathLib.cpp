@@ -109,28 +109,46 @@ namespace MathLib
 		return result;
 	}
 	
-	bool IntersectionTest::AABBvsLine(AABB box, Line line, v2 toAABBVec)
+	bool IntersectionTest::AABBvsLine(AABB box, v2 boxPos, Line line)
 	{
+		v2 toAABBVec = boxPos - line.startPoint;
 		v2 lineDir = line.getLineDir();
-		v2 lineCenter = line.startPoint + lineDir.Scale(line.getLength() / 2);
+		v2 lineCenter = (line.startPoint + lineDir.Scale(line.getLength() / 2.0));
 		v2 lineCenterToAABB = toAABBVec - (lineCenter - line.startPoint);
-		v2 diff = line.endPoint - lineCenter;
-		if(!MathLib::IntersectionTest::AABBvsAABB(AABB(diff.x + line.width,diff.y+line.width), box,lineCenterToAABB))
-		{
-			return false;
-		}
+		
+		v2 lineAABBMin;
+		lineAABBMin.x = (line.startPoint.x - line.width) < (line.endPoint.x - line.width) ? (line.startPoint.x - line.width) : (line.endPoint.x - line.width);
+		lineAABBMin.y = (line.startPoint.y - line.width) < (line.endPoint.y - line.width) ? (line.startPoint.y - line.width) : (line.endPoint.y - line.width);
+		v2 lineAABBMax;
+		lineAABBMax.x = (line.startPoint.x + line.width) > (line.endPoint.x + line.width) ? (line.startPoint.x + line.width) : (line.endPoint.x + line.width);
+		lineAABBMax.y = (line.startPoint.y + line.width) > (line.endPoint.y + line.width) ? (line.startPoint.y + line.width) : (line.endPoint.y + line.width);
+		
+		float lineAABBWidth = lineAABBMax.x - lineAABBMin.x;
+		float lineAABBHeight = lineAABBMax.y - lineAABBMin.y;
+		
+		v2 lineAABBCorners[4];
+		lineAABBCorners[0] = lineAABBMax;
+		lineAABBCorners[1] = lineAABBMax - v2(0,lineAABBHeight);
+		lineAABBCorners[2] = lineAABBMax - v2(lineAABBWidth,0);
+		lineAABBCorners[3] = lineAABBMin;
 		
 		v2 AABBCorners[4];
-		AABBCorners[0] = toAABBVec + v2( box.width,  box.height);
-		AABBCorners[1] = toAABBVec + v2( box.width, -box.height);
-		AABBCorners[2] = toAABBVec + v2(-box.width,  box.height);
-		AABBCorners[3] = toAABBVec + v2(-box.width, -box.height);
+		AABBCorners[0] = boxPos + v2( box.width,  box.height);
+		AABBCorners[1] = boxPos + v2( box.width, -box.height);
+		AABBCorners[2] = boxPos + v2(-box.width,  box.height);
+		AABBCorners[3] = boxPos + v2(-box.width, -box.height);
 		
-		float projectionMin = toAABBVec.Dot(lineDir);
+		
+		if(fabs(lineCenter.x - boxPos.x) > (lineAABBWidth / 2) + box.width)
+			return false;
+		if(fabs(lineCenter.y - boxPos.y) > (lineAABBHeight / 2) + box.height)
+			return false;
+
+		float projectionMin = (boxPos - line.startPoint).Dot(lineDir);
 		float projectionMax = projectionMin;
 		for(int i = 0; i < 4; i++)
 		{
-			float dot = AABBCorners[i].Dot(lineDir);
+			float dot = (AABBCorners[i] - line.startPoint).Dot(lineDir);
 			if(dot > projectionMax)
 			{
 				projectionMax = dot;
@@ -144,12 +162,12 @@ namespace MathLib
 			|| (projectionMin > -line.width && projectionMin < line.getLength() + line.width)
 			|| (projectionMin < -line.width && projectionMax > line.getLength() + line.width))
 		{
-			v2 lineDirPerp = lineDir.getPerpendicular();
-			projectionMin = toAABBVec.Dot(lineDirPerp);
+			v2 lineDirPerp = lineDir.getPerpendicular().Normalize();
+			projectionMin = (boxPos - line.startPoint).Dot(lineDirPerp);
 			projectionMax = projectionMin;
 			for(int i = 0; i < 4; i++)
 			{
-				float dot = AABBCorners[i].Dot(lineDirPerp);
+				float dot = (AABBCorners[i] - line.startPoint).Dot(lineDirPerp);
 				if(dot > projectionMax)
 				{
 					projectionMax = dot;
@@ -197,9 +215,16 @@ namespace MathLib
 		
 	}
 	
-	bool IntersectionTest::OBBvsLine(OBB box, Line line, v2 toLineVec)
+	bool IntersectionTest::OBBvsLine(OBB box, v2 boxPos, Line line)
 	{
-		return false;
+		float rotation = acos(box.rightAxis.x);
+		
+		v2 relativeStartPoint = (line.startPoint - boxPos).rotate(-rotation);
+		v2 relativeEndPoint   = (line.endPoint - boxPos).rotate(-rotation);
+		
+		Line lineRotated(relativeStartPoint ,relativeEndPoint ,line.width);
+		
+		return AABBvsLine(AABB(box.width,box.height),v2(0,0), lineRotated);
 	}
 	
 	bool IntersectionTest::SpherevsSphere(Sphere sphere1, Sphere sphere2, v2 diffVec)
@@ -210,8 +235,73 @@ namespace MathLib
 		return ((sphere1.radius + sphere2.radius) > distance);
 	}
 	
-	bool IntersectionTest::SpherevsLine(Sphere sphere, Line line, v2 toLineVec)
+	bool IntersectionTest::SpherevsLine(Sphere sphere,v2 spherePos, Line line)
 	{
+		v2 toSphereVec = spherePos - line.startPoint;
+		v2 lineDir = line.getLineDir();
+		v2 perpLineDir = lineDir.getPerpendicular();
+		
+		float sphereProjection = toSphereVec.projectOnto(lineDir).Length();
+		
+		if((sphereProjection + sphere.radius) < -line.width)
+			return false;
+		if((sphereProjection - sphere.radius) > line.getLength() + line.width)
+			return false;
+		
+		
+		sphereProjection = toSphereVec.projectOnto(perpLineDir).Length();
+		
+		if((sphereProjection + sphere.radius) < -line.width)
+			return false;
+		if((sphereProjection - sphere.radius) > line.width)
+			return false;
+		
+		return true;
+	}
+	bool IntersectionTest::LinevsLine(Line line1, Line line2)
+	{
+		v2 line1Dir = line1.getLineDir();
+		v2 line2Dir = line2.getLineDir();
+		
+		v2 originDiff(line1.startPoint - line2.startPoint);
+		
+		float det = line2Dir.x * line1Dir.y - line2Dir.y * line1Dir.x;
+		
+		if(det == 0.0)
+			return false;
+		
+		float u = (originDiff.y * line2Dir.x - originDiff.x * line2Dir.y) / det;
+		float v = (originDiff.y * line1Dir.x - originDiff.x * line1Dir.y) / det;
+		
+		
+		
 		return false;
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
