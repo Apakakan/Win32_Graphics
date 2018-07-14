@@ -360,8 +360,10 @@ void RenderFrame()
 	UINT offset = 0;
 	for (int i = 0; i < gm_Nr_Of_Models; i++)
 	{
-		ID3D11Buffer* vBuffer = gModels[i].GetVertexBuffer();
-		devcon->IASetVertexBuffers(0, 1, &vBuffer, &stride, &offset);
+		ID3D11Buffer* vVertexBuffer = gModels[i].GetVertexBuffer();
+		//ID3D11Buffer* vIndexBuffer = gModels[i].GetIndexBuffer();
+		devcon->IASetVertexBuffers(0, 1, &vVertexBuffer, &stride, &offset);
+		//devcon->IASetIndexBuffer(vIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 		devcon->VSSetConstantBuffers(0, 1, &pVS_ConstantBuffer);
 
 		devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -369,6 +371,7 @@ void RenderFrame()
 		//devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 		devcon->Draw(gModels[i].GetNumOfVertexes(), 0);
+		//devcon->DrawIndexed(3, 0, 0);
 	}
 
 	swapchain->Present(0,0);
