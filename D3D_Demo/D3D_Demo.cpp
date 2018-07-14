@@ -94,12 +94,13 @@ LRESULT CALLBACK WindProc(HWND hWnd,
 
 void InitGraphics()
 {
-	VERTEX* ourVertecies = (VERTEX*)malloc(sizeof(VERTEX) * 3);
-	ourVertecies[0] = { 0.0f,  1.0f, 1.0f, 1.0f,0.0f,0.0f,1.0f };
-	ourVertecies[1] = { 0.9f, -0.9f, 1.0f, 1.0f,0.0f,0.0f,1.0f };
-	ourVertecies[2] = { -0.9f, -0.9f,1.0f, 1.0f,0.0f,0.0f,1.0f };
+	VERTEX* ourVertecies = (VERTEX*)malloc(sizeof(VERTEX) * 4);
+	ourVertecies[0] = { -1.0f, 1.0f, 0.0f, 1.0f,0.0f,0.0f,1.0f };
+	ourVertecies[1] = { 1.0f, 1.0f, 0.0f, 1.0f,0.0f,0.0f,1.0f };
+	ourVertecies[2] = { 1.0f, -1.0f, 0.0f, 1.0f,0.0f,0.0f,1.0f };
+	ourVertecies[3] = { -1.0f, -1.0f, 0.0f, 1.0f,0.0f,0.0f,1.0f };
 	
-	gModels[0].SetVertexData(ourVertecies, 3, dev, devcon);
+	gModels[0].SetVertexData(ourVertecies, 4, dev, devcon);
 	gModels[0].SetPosition(DirectX::XMFLOAT3(0, 0, 1));
 	
 }
@@ -361,17 +362,16 @@ void RenderFrame()
 	for (int i = 0; i < gm_Nr_Of_Models; i++)
 	{
 		ID3D11Buffer* vVertexBuffer = gModels[i].GetVertexBuffer();
-		//ID3D11Buffer* vIndexBuffer = gModels[i].GetIndexBuffer();
+		ID3D11Buffer* vIndexBuffer = gModels[i].GetIndexBuffer();
 		devcon->IASetVertexBuffers(0, 1, &vVertexBuffer, &stride, &offset);
-		//devcon->IASetIndexBuffer(vIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		devcon->IASetIndexBuffer(vIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 		devcon->VSSetConstantBuffers(0, 1, &pVS_ConstantBuffer);
 
 		devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		//devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
 		//devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-		devcon->Draw(gModels[i].GetNumOfVertexes(), 0);
-		//devcon->DrawIndexed(3, 0, 0);
+		devcon->DrawIndexed(6, 0, 0);
 	}
 
 	swapchain->Present(0,0);

@@ -38,13 +38,13 @@ void Model::CreateVertexBuffer(ID3D11Device *dev, ID3D11DeviceContext *devcon)
 }
 void Model::CreatetIndexBuffer(ID3D11Device *dev, ID3D11DeviceContext *devcon)
 {
-	unsigned int indexes[] = { 0, 1, 2 };
+	unsigned int indexes[] = { 0, 1, 3, 1,2,3 };
 
 	D3D11_BUFFER_DESC desc;
 	ZeroMemory(&desc, sizeof(D3D11_BUFFER_DESC));
 
 	desc.Usage = D3D11_USAGE_DEFAULT;
-	desc.ByteWidth = sizeof(unsigned int) * 3;
+	desc.ByteWidth = sizeof(unsigned int) * 6;
 	desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	desc.CPUAccessFlags = 0;
 	desc.MiscFlags = 0;
