@@ -7,8 +7,9 @@
 struct VERTEX
 {
 	float X, Y, Z;
-	float R, G, B, A;
+	//float R, G, B, A;
 };
+
 
 class Model
 {
@@ -19,7 +20,8 @@ private:
 	ID3D11Buffer *gp_VertexBuffer;
 	ID3D11Buffer *gp_IndexBuffer;
 
-	VERTEX datatest[3];
+	unsigned int *gp_IndexList;
+	int gm_NumOfIndexes;
 
 	DirectX::XMFLOAT3 gm_Position;
 	void CreateVertexBuffer(ID3D11Device *dev, ID3D11DeviceContext *devcon);
@@ -29,13 +31,17 @@ public:
 	~Model();
 	void Release();
 
-	void SetVertexData(VERTEX *vertex_data, int num_of_vertexes, ID3D11Device *dev, ID3D11DeviceContext *devcon);
+	void SetVertexData(VERTEX *vertex_data, int num_of_vertexes, unsigned int* index_list, int num_of_indexes, ID3D11Device *dev, ID3D11DeviceContext *devcon);
 	void SetPosition(DirectX::XMFLOAT3 position);
 
 	VERTEX* GetVertexData();
 	int GetNumOfVertexes();
 	ID3D11Buffer* GetVertexBuffer();
+
+	unsigned int* GetIndexData();
 	ID3D11Buffer* GetIndexBuffer();
+	int GetNumIndexes();
+	
 	DirectX::XMFLOAT3 GetPosition();
 	DirectX::XMMATRIX GetWorldMatrix();
 

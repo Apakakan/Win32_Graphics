@@ -94,13 +94,46 @@ LRESULT CALLBACK WindProc(HWND hWnd,
 
 void InitGraphics()
 {
-	VERTEX* ourVertecies = (VERTEX*)malloc(sizeof(VERTEX) * 4);
-	ourVertecies[0] = { -1.0f, 1.0f, 0.0f, 1.0f,0.0f,0.0f,1.0f };
-	ourVertecies[1] = { 1.0f, 1.0f, 0.0f, 1.0f,0.0f,0.0f,1.0f };
-	ourVertecies[2] = { 1.0f, -1.0f, 0.0f, 1.0f,0.0f,0.0f,1.0f };
-	ourVertecies[3] = { -1.0f, -1.0f, 0.0f, 1.0f,0.0f,0.0f,1.0f };
+	int BOX_NUM_VERTEXES = 8;
+	VERTEX BOX_DATA[] = {-0.500000, -0.500000,  0.500000,
+						  0.500000, -0.500000,  0.500000,
+						 -0.500000,  0.500000,  0.500000,
+						  0.500000,  0.500000,  0.500000,
+						 -0.500000,  0.500000, -0.500000,
+						  0.500000,  0.500000, -0.500000,
+						 -0.500000, -0.500000, -0.500000,
+						  0.500000, -0.500000, -0.500000 };
 	
-	gModels[0].SetVertexData(ourVertecies, 4, dev, devcon);
+	int BOX_NUM_INDEXES = 36;
+	unsigned int BOX_INDEX_LIST[] = {  0, 1, 2 ,
+									   2, 1, 3 ,
+									   2, 3, 4 ,
+									   4, 3, 5 ,
+									   4, 5, 6 ,
+									   6, 5, 7 ,
+									   6, 7, 0 ,
+									   0, 7, 1 ,
+									   1, 7, 3 ,
+									   3, 7, 5 ,
+									   6, 0, 4 ,
+									   4, 0, 2 };
+
+	VERTEX* ourVertecies = (VERTEX*)malloc(sizeof(VERTEX) * 4);
+	ourVertecies[0] = { -1.0f, 1.0f,};
+	ourVertecies[1] = { 1.0f, 1.0f,};
+	ourVertecies[2] = { 1.0f, -1.0f,};
+	ourVertecies[3] = { -1.0f, -1.0f,};
+
+	unsigned int* ourIndecies = (unsigned int*)malloc(sizeof(unsigned int) * 6);
+	ourIndecies[0] = 0;
+	ourIndecies[1] = 1;
+	ourIndecies[2] = 3;
+	ourIndecies[3] = 1;
+	ourIndecies[4] = 2;
+	ourIndecies[5] = 3;
+	
+	//gModels[0].SetVertexData(ourVertecies, 4, ourIndecies, 6, dev, devcon);
+	gModels[0].SetVertexData(BOX_DATA, BOX_NUM_VERTEXES, BOX_INDEX_LIST, BOX_NUM_INDEXES, dev, devcon);
 	gModels[0].SetPosition(DirectX::XMFLOAT3(0, 0, 1));
 	
 }
@@ -140,9 +173,8 @@ void InitPipeline()
 	D3D11_INPUT_ELEMENT_DESC ied[] =
 	{
 		{"POSITION",0, DXGI_FORMAT_R32G32B32_FLOAT,   0, 0,D3D11_INPUT_PER_VERTEX_DATA,0},
-		{"COLOR",   0, DXGI_FORMAT_R32G32B32A32_FLOAT,0,12,D3D11_INPUT_PER_VERTEX_DATA,0},
 	};
-	dev->CreateInputLayout(ied,2,VS->GetBufferPointer(),VS->GetBufferSize(),&pLayout);
+	dev->CreateInputLayout(ied,1,VS->GetBufferPointer(),VS->GetBufferSize(),&pLayout);
 	devcon->IASetInputLayout(pLayout);
 }
 
@@ -371,7 +403,8 @@ void RenderFrame()
 		//devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
 		//devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-		devcon->DrawIndexed(6, 0, 0);
+		int num_indexes = gModels[i].GetNumIndexes();
+		devcon->DrawIndexed(num_indexes, 0, 0);
 	}
 
 	swapchain->Present(0,0);

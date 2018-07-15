@@ -7,7 +7,6 @@ cbuffer VS_CONSTANT_BUFFER : register(b0)
 struct VIn
 {
 	float3 position : POSITION;
-	float4 color : COLOR;
 };
 
 struct VOut
@@ -22,14 +21,13 @@ VOut VShader(VIn input)
 	
 	output.position = mul(float4(input.position,1.0f), mWorldViewProj);
 	//output.position = float4(input.position, 1.0f);
-	output.color = input.color;
+	output.color = float4(input.position,0.0f);
 	
 	return output;
 }
 
 float4 PShader(float4 position : SV_POSITION, float4 color : COLOR) : SV_TARGET
 {
-
 	return color;
 
 }

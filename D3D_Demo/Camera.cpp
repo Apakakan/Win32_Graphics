@@ -55,6 +55,15 @@ void Camera::HandleInput()
 		ResetCamera();
 	}
 
+	if (GetAsyncKeyState(VK_SPACE))
+	{
+		AddFloat3(gm_Posistion, gm_UpDirection);
+	}
+	if (GetAsyncKeyState(VK_CONTROL))
+	{
+		SubtractFloat3(gm_Posistion, gm_UpDirection);
+	}
+
 }
 
 void Camera::ResetCamera()
