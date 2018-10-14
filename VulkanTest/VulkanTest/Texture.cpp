@@ -1,13 +1,13 @@
 #include "Texture.h"
 
 Texture::Texture() {
-
+	mipLevels = 1;
 }
 Texture::~Texture() {
 
 }
 
-void Texture::createTextureImage(std::string texture_path, uint32_t mipLevels, helpers::VulkanData vulkanData) {
+void Texture::createTextureImage(std::string texture_path, helpers::VulkanData vulkanData) {
 	int texWidth, texHeight, texChannels;
 	VkDevice* device = vulkanData.device;
 

@@ -91,7 +91,3 @@ void Model::createIndexBuffer(helpers::VulkanData vulkanData) {
 	vkDestroyBuffer(*device, stagingBuffer, nullptr);
 	vkFreeMemory(*device, stagingBufferMemory, nullptr);
 }
-
-glm::vec3 Model::getPosition() {
-	return position;
-}

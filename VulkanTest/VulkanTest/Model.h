@@ -9,8 +9,6 @@
 #include <fstream>
 #include <array>
 #include <unordered_map>
-//#define STB_IMAGE_IMPLEMENTATION
-//#include <stb_image.h>
 
 //#define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
@@ -69,7 +67,6 @@ class Model
 private:
 	std::vector<Vertex> verticies;
 	std::vector<uint32_t> indices;
-	glm::vec3 position;
 
 	VkBuffer vertexBufer;
 	VkDeviceMemory vertexBufferMemory;
@@ -85,7 +82,6 @@ public:
 
 	void LoadModel(std::string model_path, helpers::VulkanData vulkanData);
 
-	glm::vec3 getPosition();
 
 };
 

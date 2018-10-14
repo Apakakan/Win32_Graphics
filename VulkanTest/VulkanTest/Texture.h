@@ -9,12 +9,13 @@ private:
 	VkImage textureImage;
 	VkImageView textureImageView;
 	VkDeviceMemory textureImageMemory;
+	uint32_t mipLevels;
 
 public:
 	Texture();
 	~Texture();
 
-	void createTextureImage(std::string texture_path, uint32_t mipLevels, helpers::VulkanData vulkanData);
+	void createTextureImage(std::string texture_path, helpers::VulkanData vulkanData);
 	void createTextureImageView(helpers::VulkanData vulkanData, uint32_t mipLevels);
 };
 
