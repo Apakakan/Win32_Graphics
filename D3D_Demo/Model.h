@@ -9,7 +9,18 @@ struct VERTEX
 	float X, Y, Z;
 	//float R, G, B, A;
 };
-
+struct NORMAL
+{
+	float X, Y, Z;
+};
+struct UVCOORD
+{
+	float U,V;
+};
+struct VERTEX_FACE_INDEXES
+{
+	int pos, norm, uvcoord;
+};
 
 class Model
 {
